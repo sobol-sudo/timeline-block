@@ -8,7 +8,6 @@ export const CustomButton = styled.button<{
   $bg: string;
   $width: string;
   $padding: string;
-  $disabled: boolean;
 }>`
   display: inline-flex;
   align-items: center;
@@ -24,10 +23,18 @@ export const CustomButton = styled.button<{
   cursor: pointer;
   width: ${(props) => props.$width};
   transition: all 0.3s ease;
-  pointer-events: ${(props) => (props.$disabled ? "none" : null)};
-  opacity: ${(props) => (props.$disabled ? "0.5" : null)};
 
-  &:hover {
+  &:not(:disabled):hover {
     background: ${(props) => props.$hover_bg};
+  }
+
+  &:focus-visible {
+    outline: 2px solid #42567a;
+    outline-offset: 3px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 `;

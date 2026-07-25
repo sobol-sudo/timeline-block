@@ -44,3 +44,9 @@ Production bundle into `dist/`:
 ```bash
 npm run build
 ```
+
+Type checking. Babel strips types without checking them, so the build alone will not catch a type error:
+
+```bash
+npm run typecheck
+```

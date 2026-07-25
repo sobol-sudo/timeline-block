@@ -21,10 +21,14 @@ export const Circle = styled.div<{ $rotation: number }>`
   }
 `;
 
-export const Dot = styled.div<{ $active: boolean; $rotation: number }>`
+export const Dot = styled.button<{ $active: boolean; $rotation: number }>`
   position: absolute;
   width: 6px;
   height: 6px;
+  padding: 0;
+  border: none;
+  appearance: none;
+  font: inherit;
   background-color: #42567a;
   border-radius: 50%;
   cursor: pointer;
@@ -32,8 +36,27 @@ export const Dot = styled.div<{ $active: boolean; $rotation: number }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  /* Matches the dial's own 0.6s transform so the counter-rotation stays in
+     lockstep and the numbers never tilt mid-turn. */
+  transition: transform 0.6s ease, opacity 0.3s ease;
   z-index: ${(props) => (props.$active ? 2 : 1)};
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible::before {
+    opacity: 1;
+    background-color: #fff;
+    border: 1px solid #42567a;
+    outline: 2px solid #42567a;
+    outline-offset: 2px;
+  }
+
+  &:focus-visible span {
+    opacity: 1;
+    transform: scale(1);
+  }
 
   &::before {
     content: "";
@@ -77,9 +100,13 @@ const ShowName = keyframes`
   }
 `;
 
-export const DotName = styled.h3`
+// A span rather than a heading: it labels the active dot inside a <button>,
+// where flow content is not allowed. The explicit margin reproduces the
+// heading's former user-agent margin so the label sits where it always did.
+export const DotName = styled.span`
   position: absolute;
   left: 45px;
+  margin: 20px 0;
   color: #42567a;
   font-family: "PT Sans";
   font-size: 20px;

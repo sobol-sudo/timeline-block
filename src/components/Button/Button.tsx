@@ -12,6 +12,8 @@ type ButtonProps = {
   width: string;
   padding: string;
   disabled: boolean;
+  ariaLabel: string;
+  ariaCurrent?: boolean;
   onClick: () => void;
 };
 
@@ -26,10 +28,13 @@ const Button: React.FC<ButtonProps> = ({
   width,
   padding,
   disabled,
+  ariaLabel,
+  ariaCurrent,
   onClick,
 }) => {
   return (
     <CustomButton
+      type="button"
       $border={border}
       $border_color={border_color}
       $border_radius={border_radius}
@@ -37,10 +42,12 @@ const Button: React.FC<ButtonProps> = ({
       $width={width}
       onClick={onClick}
       $padding={padding}
-      $disabled={disabled}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent ? "true" : undefined}
       $hover_bg={hover_bg}
     >
-      {icon && <img src={icon} alt="icon" />}
+      {icon && <img src={icon} alt="" />}
       {text && text}
     </CustomButton>
   );

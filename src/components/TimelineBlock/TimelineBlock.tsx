@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import TimeCircle from "@components/TimeCircle/TimeCircle";
 import Title from "@components/Title/Title";
 import TimeSlider from "@components/TimeSlider/TimeSlider";
@@ -14,13 +14,19 @@ const TimelineBlock: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
+  // Clamp every selection so no caller can push the index out of range and
+  // leave the tree rendering an undefined segment.
+  const selectIndex = useCallback((index: number) => {
+    setActiveIndex(Math.min(Math.max(index, 0), MOCK_DATA.length - 1));
+  }, []);
+
   return (
     <Wrapper>
       <Title title="Historical\ndates" />
       <TimeCircle
         segments={MOCK_DATA}
         activeIndex={activeIndex}
-        onSelect={setActiveIndex}
+        onSelect={selectIndex}
       />
       <AnimatedYears
         startYear={+MOCK_DATA[activeIndex].date_1}
@@ -30,7 +36,7 @@ const TimelineBlock: React.FC = () => {
         <CircleNavigation
           segments={MOCK_DATA}
           activeIndex={activeIndex}
-          onSelect={setActiveIndex}
+          onSelect={selectIndex}
         />
       )}
       <TimeSlider activeIndex={activeIndex} segments={MOCK_DATA} />
@@ -38,7 +44,7 @@ const TimelineBlock: React.FC = () => {
         <MobileNavigation
           segments={MOCK_DATA}
           activeIndex={activeIndex}
-          onSelect={setActiveIndex}
+          onSelect={selectIndex}
         />
       )}
     </Wrapper>

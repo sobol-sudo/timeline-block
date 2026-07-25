@@ -35,6 +35,8 @@ const MobileNavigation: React.FC<NavigationProps> = ({
             padding="3px"
             onClick={() => onSelect(index)}
             disabled={false}
+            ariaLabel={`Go to ${topic.name}`}
+            ariaCurrent={activeIndex === index}
           />
         ))}
       </PaginationWrapper>

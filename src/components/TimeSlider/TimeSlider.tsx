@@ -1,6 +1,6 @@
 import React from "react";
 import { SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
+import { A11y, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -18,10 +18,15 @@ const TimeSlider: React.FC<TimeSliderProps> = ({ activeIndex, segments }) => {
     <SwiperWrapper key={activeIndex}>
       <TopicTitle>{segments[activeIndex].name}</TopicTitle>
       <StyledSwiper
-        modules={[Navigation]}
+        modules={[Navigation, A11y]}
         slidesPerView={3}
         spaceBetween={80}
         navigation
+        a11y={{
+          prevSlideMessage: "Previous events",
+          nextSlideMessage: "Next events",
+          containerMessage: "Key events for the selected period",
+        }}
         breakpoints={{
           0: { slidesPerView: 1.5 },
           480: { slidesPerView: 2, spaceBetween: 10 },

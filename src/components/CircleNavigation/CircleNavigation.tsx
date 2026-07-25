@@ -35,6 +35,7 @@ const CircleNavigation: React.FC<NavigationProps> = ({
           padding="10px 12px"
           onClick={() => onSelect(activeIndex - 1)}
           disabled={activeIndex === 0}
+          ariaLabel="Previous period"
         />
         <Button
           text=""
@@ -48,6 +49,7 @@ const CircleNavigation: React.FC<NavigationProps> = ({
           padding="10px 12px"
           onClick={() => onSelect(activeIndex + 1)}
           disabled={activeIndex + 1 === segments.length}
+          ariaLabel="Next period"
         />
       </ButtonsWrapper>
     </NavWrapper>

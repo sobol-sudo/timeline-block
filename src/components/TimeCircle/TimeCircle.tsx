@@ -45,11 +45,14 @@ const TimeCircle: React.FC<TimeCircleProps> = ({
         return (
           <Dot
             key={index}
+            type="button"
             $active={index === activeIndex}
             style={{ left: `${x}px`, top: `${y}px` }}
             onClick={() => onSelect(index)}
             $rotation={rotation}
             title={label}
+            aria-label={`${segment.name}, ${segment.date_1}–${segment.date_2}`}
+            aria-current={index === activeIndex ? "true" : undefined}
           >
             <span>{index + 1}</span>
             {index === activeIndex && <DotName>{segment.name}</DotName>}
