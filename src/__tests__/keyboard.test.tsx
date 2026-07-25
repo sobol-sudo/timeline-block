@@ -17,11 +17,118 @@ import { MOBILE_WIDTH, setViewport } from "./helpers/viewport";
 const periodName = (): string | null =>
   screen.getByRole("region").getAttribute("aria-label");
 
-const dotFor = (index: number): HTMLElement => {
+const dialName = (index: number): string => {
   const segment = MOCK_DATA[index];
-  return screen.getByRole("button", {
-    name: `${segment.name}, ${segment.date_1}–${segment.date_2}`,
-  });
+  return `${segment.name}, ${segment.date_1}–${segment.date_2}`;
+};
+
+const mobileDotName = (index: number): string => `Go to ${MOCK_DATA[index].name}`;
+
+const dotFor = (index: number): HTMLElement =>
+  screen.getByRole("button", { name: dialName(index) });
+
+type User = ReturnType<typeof userEvent.setup>;
+
+const COUNTER = /^Period (\d+) of (\d+)$/;
+
+/** The period the block itself says it is on, read off its own counter. */
+const currentIndex = (): number => {
+  const text = screen.getByText(COUNTER).textContent ?? "";
+  return Number((COUNTER.exec(text) as RegExpExecArray)[1]) - 1;
+};
+
+/** Accessible names of everything Tab can reach, in tab order. */
+const tabThrough = async (user: User): Promise<string[]> => {
+  const reached: string[] = [];
+  for (let step = 0; step < 40; step += 1) {
+    await user.tab();
+    const focused = document.activeElement;
+    if (!focused || focused === document.body) break;
+    const label = focused.getAttribute("aria-label") ?? focused.textContent ?? "";
+    if (reached.includes(label)) break;
+    reached.push(label);
+  }
+  return reached;
+};
+
+/**
+ * Where a control is required to lead, worked out from the name it announces.
+ * An unrecognised name throws rather than being skipped: a control with no
+ * declared destination is exactly what the sweep below exists to catch.
+ */
+const destinationOf = (label: string, from: number): number => {
+  const named = MOCK_DATA.findIndex(
+    (_, index) => label === dialName(index) || label === mobileDotName(index)
+  );
+  if (named !== -1) return named;
+
+  if (label === "Previous period") {
+    // Being reachable at all means it must have somewhere to go. This is the
+    // original bug in one line: the dimmed arrow sat in the tab order at
+    // index 0, and Enter on it asked for segment -1.
+    expect(from).toBeGreaterThan(0);
+    return from - 1;
+  }
+  if (label === "Next period") {
+    expect(from).toBeLessThan(MOCK_DATA.length - 1);
+    return from + 1;
+  }
+
+  throw new Error(`no destination is declared for the control "${label}"`);
+};
+
+/**
+ * Walks the tab order from a given period, then presses Enter and Space on
+ * every control it found — each on a freshly mounted block, so the controls
+ * are exercised independently rather than as one long chain. Every press has
+ * to leave the block standing and land on the period the control's own name
+ * promises. Returns the tab order so callers can assert what was in it.
+ */
+const sweepFrom = async (
+  user: User,
+  from: number,
+  seedName: (index: number) => string
+): Promise<string[]> => {
+  const seed = async (): Promise<void> => {
+    if (from === 0) return;
+    await user.click(screen.getByRole("button", { name: seedName(from) }));
+    // Clicking left focus on the seed control; the walk has to start from the
+    // top of the document or it would miss everything before it.
+    (document.activeElement as HTMLElement | null)?.blur();
+  };
+
+  const opening = render(<TimelineBlock />);
+  await seed();
+  const reached = await tabThrough(user);
+  opening.unmount();
+
+  expect(reached.length).toBeGreaterThan(0);
+
+  // Enter and Space are the two keys a native button answers to. A div
+  // wearing role="button" answers to neither.
+  for (const key of ["{Enter}", " "]) {
+    for (const label of reached) {
+      const view = render(<TimelineBlock />);
+      await seed();
+      expect(currentIndex()).toBe(from);
+
+      const destination = destinationOf(label, from);
+      screen.getByRole("button", { name: label }).focus();
+      await user.keyboard(key);
+
+      // The block is still standing...
+      expect(
+        screen.getByRole("heading", { name: /Historical/ })
+      ).toBeInTheDocument();
+      // ...and the press landed where the control's name said it would.
+      expect(periodName()).toBe(`Key events, ${MOCK_DATA[destination].name}`);
+      expect(currentIndex()).toBe(destination);
+
+      view.unmount();
+    }
+  }
+
+  return reached;
 };
 
 describe("keyboard operation", () => {
@@ -189,4 +296,44 @@ describe("keyboard operation", () => {
       "aria-current"
     );
   });
+
+  /**
+   * The sweep. Everything above pins one control at a time; this walks the
+   * whole tab order and holds every control it finds to the destination its
+   * own accessible name promises, with Enter and with Space, from both ends
+   * of the range. Three failures it is meant to catch, in order of how badly
+   * they hurt: a control that lands on a period that does not exist and takes
+   * the page down with it; a control that is reachable but leads nowhere
+   * (the dimmed arrow in the tab order — the original bug); and a control
+   * wired to the wrong period. Because it enumerates the tab order rather
+   * than a fixed list, a new control added without a destination fails it.
+   */
+  it("takes every keyboard-reachable control exactly where its name promises", async () => {
+    const user = userEvent.setup();
+
+    const fromFirst = await sweepFrom(user, 0, dialName);
+    expect(fromFirst).toContain("Next period");
+    expect(fromFirst).not.toContain("Previous period");
+
+    const fromLast = await sweepFrom(user, MOCK_DATA.length - 1, dialName);
+    expect(fromLast).toContain("Previous period");
+    expect(fromLast).not.toContain("Next period");
+  }, 30000);
+
+  /**
+   * The same sweep over the mobile controls, which are a different component.
+   * jsdom applies no media queries, so the dial points are still in the tab
+   * order here where a browser would have hidden them; they are real buttons
+   * either way and holding them to their destinations costs nothing.
+   */
+  it("takes every mobile control exactly where its name promises", async () => {
+    setViewport(MOBILE_WIDTH);
+    const user = userEvent.setup();
+
+    const reached = await sweepFrom(user, 0, mobileDotName);
+
+    MOCK_DATA.forEach((_, index) => {
+      expect(reached).toContain(mobileDotName(index));
+    });
+  }, 30000);
 });

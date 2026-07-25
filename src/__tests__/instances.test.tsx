@@ -3,6 +3,7 @@ import "@testing-library/jest-dom";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TimelineBlock from "@components/TimelineBlock/TimelineBlock";
+import MOCK_DATA from "@data/mock";
 import { rotationOf } from "./helpers/styles";
 
 /**
@@ -89,5 +90,46 @@ describe("two blocks on one page", () => {
     expect(
       rotationOf(within(second).getByRole("group", { name: "Time periods" }))
     ).toBe(45);
+  });
+
+  /**
+   * Pressing an arrow onto the end of the range disables it, and the block
+   * hands focus to the opposite arrow so the keyboard user is not dropped out
+   * of the page. That handoff has to find the other arrow *of the block that
+   * was pressed*. Reaching for it by anything page-wide — a selector on the
+   * label, a shared module-level ref — sends focus into the wrong block, and
+   * every one of those mistakes still passes on a page holding one block.
+   * The second block is the one driven here precisely because a page-wide
+   * lookup would land on the first.
+   */
+  it("keeps the focus handoff inside the block whose arrow was pressed", async () => {
+    const user = userEvent.setup();
+    const { first, second } = renderTwo();
+
+    for (let step = 0; step < MOCK_DATA.length - 1; step += 1) {
+      within(second).getByRole("button", { name: "Next period" }).focus();
+      await user.keyboard("{Enter}");
+    }
+
+    const nextInSecond = within(second).getByRole("button", {
+      name: "Next period",
+    });
+    expect(nextInSecond).toBeDisabled();
+
+    const focused = document.activeElement as HTMLElement;
+    expect(focused).toBe(
+      within(second).getByRole("button", { name: "Previous period" })
+    );
+    expect(second.contains(focused)).toBe(true);
+    expect(first.contains(focused)).toBe(false);
+
+    // The block nobody touched is still on its first period, with its own
+    // previous arrow correctly dead.
+    expect(within(first).getByRole("region")).toHaveAccessibleName(
+      "Key events, Science"
+    );
+    expect(
+      within(first).getByRole("button", { name: "Previous period" })
+    ).toBeDisabled();
   });
 });
