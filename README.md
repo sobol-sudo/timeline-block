@@ -54,3 +54,18 @@ Type checking. Babel strips types without checking them, so the build alone will
 ```bash
 npm run typecheck
 ```
+
+## Tests
+
+```bash
+npm test
+```
+
+Jest on jsdom with React Testing Library, transformed by the same Babel presets the bundle uses. The suites in `src/__tests__` are regression tests: each one pins behaviour that has already broken here once.
+
+- `keyboard.test.tsx` — every control is a real button, reachable by Tab and activated by Enter or Space; the arrow at each end of the range carries a genuine `disabled` attribute and stays out of the tab order; a period list that shrinks under the current selection keeps rendering; a block with no periods offers no controls at all. The tab-order assertion is the one that matters most: `disabled` used to be a styled-components prop only, so the dimmed arrow was still tabbable and Enter on it asked for index −1.
+- `clamp.test.tsx` — the block clamps whatever index a control asks for, so no selector can empty the page. The dial is swapped for a probe that requests −1 and 99; the rest of the block is real.
+- `geometry.test.tsx` — points sit at equal angles for 3, 4, 6 and 7 periods, all at the same radius and starting at twelve o'clock; the dial takes the short way round rather than unwinding; the dots counter-rotate to exactly the negative of the dial's angle and on the same 0.6 s clock, so the numbers stay upright through the turn as well as at rest.
+- `instances.test.tsx` — two blocks on one page get separate panel ids, every `aria-controls` resolves to an element inside its own block, no id is duplicated, and choosing a period in one block leaves the other's panel and dial exactly where they were.
+
+Two things jsdom does not provide are supplied in `src/__tests__/helpers`: a `matchMedia` that really evaluates `max-width` queries against a width the tests set, and a reader that pulls styled-components' generated declarations back out of the injected stylesheet, because `getComputedStyle` in jsdom does not resolve class rules and the dial's rotation exists nowhere else.
