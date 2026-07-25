@@ -16,7 +16,7 @@ const TimelineBlock: React.FC = () => {
 
   return (
     <Wrapper>
-      <Title title="Исторические\nдаты" />
+      <Title title="Historical\ndates" />
       <TimeCircle
         segments={MOCK_DATA}
         activeIndex={activeIndex}
