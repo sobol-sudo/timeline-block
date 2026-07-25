@@ -14,6 +14,7 @@ type ButtonProps = {
   disabled: boolean;
   ariaLabel: string;
   ariaCurrent?: boolean;
+  ariaControls?: string;
   onClick: () => void;
 };
 
@@ -30,6 +31,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   ariaLabel,
   ariaCurrent,
+  ariaControls,
   onClick,
 }) => {
   return (
@@ -45,6 +47,7 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled}
       aria-label={ariaLabel}
       aria-current={ariaCurrent ? "true" : undefined}
+      aria-controls={ariaControls}
       $hover_bg={hover_bg}
     >
       {icon && <img src={icon} alt="" />}

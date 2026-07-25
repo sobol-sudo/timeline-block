@@ -125,3 +125,26 @@ export const TopicTitle = styled.h2`
 export const SwiperWrapper = styled.div`
   width: 100%;
 `;
+
+export const EmptyEvents = styled.p`
+  color: #42567a;
+  font-family: "PT Sans";
+  font-size: 20px;
+  line-height: 30px;
+  margin: 0;
+  padding: 16px 80px 0 80px;
+  opacity: 0;
+  transform: translateY(20px);
+
+  animation: ${Show} 1.5s 1;
+  animation-fill-mode: forwards;
+
+  ${media.md} {
+    padding: 16px 0 0 0;
+    border-top: 1px solid #c7cdd9;
+  }
+  ${media.sm} {
+    font-size: 15px;
+    line-height: 20px;
+  }
+`;

@@ -7,11 +7,13 @@ import {
 import Button from "@components/Button";
 import { NavigationProps } from "@types";
 import { COLORS } from "@constants";
+import { VisuallyHidden } from "@styles/global";
 
 const CircleNavigation: React.FC<NavigationProps> = ({
   activeIndex,
   onSelect,
   segments,
+  controlsId,
 }) => {
   const formatSlideNumber = (num: number): string => {
     return num < 10 ? `0${num}` : String(num);
@@ -20,7 +22,14 @@ const CircleNavigation: React.FC<NavigationProps> = ({
   return (
     <NavWrapper>
       <CurrentSlide>
-        {`${formatSlideNumber(activeIndex + 1)}/${formatSlideNumber(segments.length)}`}
+        {/* "01/06" reads as a date to a screen reader, so the visible glyphs
+            are hidden from the a11y tree and spelled out alongside. */}
+        <span aria-hidden="true">
+          {`${formatSlideNumber(activeIndex + 1)}/${formatSlideNumber(segments.length)}`}
+        </span>
+        <VisuallyHidden>
+          {`Period ${activeIndex + 1} of ${segments.length}`}
+        </VisuallyHidden>
       </CurrentSlide>
       <ButtonsWrapper>
         <Button
@@ -36,6 +45,7 @@ const CircleNavigation: React.FC<NavigationProps> = ({
           onClick={() => onSelect(activeIndex - 1)}
           disabled={activeIndex === 0}
           ariaLabel="Previous period"
+          ariaControls={controlsId}
         />
         <Button
           text=""
@@ -50,6 +60,7 @@ const CircleNavigation: React.FC<NavigationProps> = ({
           onClick={() => onSelect(activeIndex + 1)}
           disabled={activeIndex + 1 === segments.length}
           ariaLabel="Next period"
+          ariaControls={controlsId}
         />
       </ButtonsWrapper>
     </NavWrapper>

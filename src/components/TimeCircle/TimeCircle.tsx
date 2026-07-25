@@ -8,6 +8,7 @@ const TimeCircle: React.FC<TimeCircleProps> = ({
   segments,
   activeIndex,
   onSelect,
+  controlsId,
 }) => {
   const isMobile = useMediaQuery(BREAKPOINTS.TABLET);
   const segmentAngle = useMemo(() => 360 / segments.length, [segments.length]);
@@ -33,8 +34,11 @@ const TimeCircle: React.FC<TimeCircleProps> = ({
     setPrevIndex(activeIndex);
   }, [activeIndex, segments.length, segmentAngle, prevIndex]);
 
+  // 360 / 0 is Infinity, which would place every dot at NaN.
+  if (segments.length === 0) return null;
+
   return (
-    <Circle $rotation={rotation}>
+    <Circle $rotation={rotation} role="group" aria-label="Time periods">
       {segments.map((segment, index) => {
         const label = `${segment.date_1} – ${segment.date_2}`;
         const angle = segmentAngle * index + CIRCLE_CONFIG.START_ANGLE;
@@ -53,6 +57,7 @@ const TimeCircle: React.FC<TimeCircleProps> = ({
             title={label}
             aria-label={`${segment.name}, ${segment.date_1}–${segment.date_2}`}
             aria-current={index === activeIndex ? "true" : undefined}
+            aria-controls={controlsId}
           >
             <span>{index + 1}</span>
             {index === activeIndex && <DotName>{segment.name}</DotName>}

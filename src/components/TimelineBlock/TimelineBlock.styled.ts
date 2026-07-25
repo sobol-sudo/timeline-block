@@ -1,6 +1,22 @@
 import styled from "styled-components";
 import { media } from "@styles/media";
 
+// Shown when the block is handed no periods at all. Without it the tree
+// reads date_1 off undefined and the whole page renders blank.
+export const EmptyState = styled.p`
+  color: #42567a;
+  font-family: "PT Sans";
+  font-size: 20px;
+  line-height: 30px;
+  margin: 0;
+  padding: 60px 0;
+
+  ${media.sm} {
+    font-size: 15px;
+    line-height: 20px;
+  }
+`;
+
 export const Wrapper = styled.div`
   display: flex;
   flex-direction: column;

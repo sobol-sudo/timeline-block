@@ -9,6 +9,7 @@ const MobileNavigation: React.FC<NavigationProps> = ({
   activeIndex,
   onSelect,
   segments,
+  controlsId,
 }) => {
   return (
     <Wrapper>
@@ -16,8 +17,9 @@ const MobileNavigation: React.FC<NavigationProps> = ({
         segments={segments}
         activeIndex={activeIndex}
         onSelect={onSelect}
+        controlsId={controlsId}
       />
-      <PaginationWrapper>
+      <PaginationWrapper role="group" aria-label="Time periods">
         {segments.map((topic, index) => (
           <Button
             key={topic.name}
@@ -37,6 +39,7 @@ const MobileNavigation: React.FC<NavigationProps> = ({
             disabled={false}
             ariaLabel={`Go to ${topic.name}`}
             ariaCurrent={activeIndex === index}
+            ariaControls={controlsId}
           />
         ))}
       </PaginationWrapper>
