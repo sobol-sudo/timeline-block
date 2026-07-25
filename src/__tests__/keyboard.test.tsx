@@ -100,6 +100,52 @@ describe("keyboard operation", () => {
     expect(screen.getByRole("button", { name: "Next period" })).toBeDisabled();
   });
 
+  /**
+   * Reaching an end of the range disables the arrow that got you there. A
+   * browser unfocuses an element the moment it becomes disabled — checked in
+   * Chrome: `document.activeElement` falls back to `<body>` — so the arrow
+   * that worked five times in a row used to eject the keyboard user out of
+   * the block on the sixth press, and the next Tab restarted from the top of
+   * the page. jsdom does not implement that unfocusing step, so these assert
+   * the fix rather than the symptom: focus has to be sitting on the arrow
+   * that is still live.
+   */
+  it("hands focus to the live arrow when the pressed one disables itself", async () => {
+    const user = userEvent.setup();
+    render(<TimelineBlock />);
+
+    for (let step = 0; step < MOCK_DATA.length - 1; step += 1) {
+      screen.getByRole("button", { name: "Next period" }).focus();
+      await user.keyboard("{Enter}");
+    }
+
+    expect(screen.getByRole("button", { name: "Next period" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Previous period" })).toHaveFocus();
+
+    for (let step = 0; step < MOCK_DATA.length - 1; step += 1) {
+      screen.getByRole("button", { name: "Previous period" }).focus();
+      await user.keyboard("{Enter}");
+    }
+
+    expect(screen.getByRole("button", { name: "Previous period" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next period" })).toHaveFocus();
+  });
+
+  it("leaves focus alone when a period is chosen from somewhere else", async () => {
+    const user = userEvent.setup();
+    render(<TimelineBlock />);
+
+    // Selecting the last period from the dial also disables the next arrow,
+    // but the arrow was not what the user pressed, so the handoff must not
+    // fire and drag focus off the point they are standing on.
+    const last = dotFor(MOCK_DATA.length - 1);
+    last.focus();
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByRole("button", { name: "Next period" })).toBeDisabled();
+    expect(dotFor(MOCK_DATA.length - 1)).toHaveFocus();
+  });
+
   it("keeps rendering when the period list shrinks under a high selection", async () => {
     const user = userEvent.setup();
     const { rerender } = render(<TimelineBlock segments={MOCK_DATA} />);

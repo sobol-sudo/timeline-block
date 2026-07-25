@@ -16,6 +16,13 @@ type ButtonProps = {
   ariaCurrent?: boolean;
   ariaControls?: string;
   onClick: () => void;
+  /**
+   * The underlying <button>. A caller that can disable this button as a
+   * result of pressing it needs the element itself, because the browser
+   * unfocuses whatever it just disabled. React 19 passes `ref` through as an
+   * ordinary prop, so no forwardRef wrapper is needed.
+   */
+  ref?: React.Ref<HTMLButtonElement>;
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -33,9 +40,11 @@ const Button: React.FC<ButtonProps> = ({
   ariaCurrent,
   ariaControls,
   onClick,
+  ref,
 }) => {
   return (
     <CustomButton
+      ref={ref}
       type="button"
       $border={border}
       $border_color={border_color}
